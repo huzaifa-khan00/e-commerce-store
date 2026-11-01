@@ -1,5 +1,7 @@
 import { MotionConfig } from "framer-motion";
 import Navbar from "./layout/Navbar";
+import Footer from "./layout/Footer";
+import MobileStickyBar from "./layout/MobileStickyBar";
 import HomePage from "./pages/HomePage";
 
 export default function App() {
@@ -10,6 +12,8 @@ export default function App() {
       <main>
         <HomePage />
       </main>
+      <Footer />
+      <MobileStickyBar />
     </MotionConfig>
   );
 }

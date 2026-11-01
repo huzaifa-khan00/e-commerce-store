@@ -10,6 +10,16 @@ export const NAV_LINKS = [
   { label: "FAQ", href: "#faq" },
 ];
 
+// PLACEHOLDER contact details, replace with the client's real ones.
+// whatsapp: international format, digits only (92 + number without the 0).
+export const CONTACT = {
+  phone: "0300 0000000",
+  whatsapp: "923000000000",
+  email: "support@yourbrand.com",
+  address: "Karachi, Pakistan",
+  hours: "Mon-Sat, 10am-8pm",
+};
+
 // Placeholder hero copy, replace with the client's real wording.
 export const HERO = {
   eyebrow: "Cash on Delivery · Free Shipping",
