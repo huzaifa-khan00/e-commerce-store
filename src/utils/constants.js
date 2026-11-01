@@ -4,10 +4,11 @@ export const BRAND = {
   tagline: "Premium quality, delivered to your door.",
 };
 
+// Absolute "/#..." links so they also work from the checkout page.
 export const NAV_LINKS = [
-  { label: "Features", href: "#features" },
-  { label: "Reviews", href: "#reviews" },
-  { label: "FAQ", href: "#faq" },
+  { label: "Features", href: "/#features" },
+  { label: "Reviews", href: "/#reviews" },
+  { label: "FAQ", href: "/#faq" },
 ];
 
 // PLACEHOLDER contact details, replace with the client's real ones.
