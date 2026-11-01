@@ -27,7 +27,7 @@ export default function Navbar() {
       )}
     >
       <nav className="mx-auto flex h-16 max-w-6xl items-center justify-between px-5">
-        <a href="#hero" className="font-heading text-lg font-semibold tracking-tight">
+        <a href="/#hero" className="font-heading text-lg font-semibold tracking-tight">
           {BRAND.name}
         </a>
 
@@ -46,7 +46,7 @@ export default function Navbar() {
         </ul>
 
         <div className="flex items-center gap-3">
-          <Button href="#buy-now" className="hidden px-5 py-2 md:inline-flex">
+          <Button href="/#buy-now" className="hidden px-5 py-2 md:inline-flex">
             Order COD
           </Button>
 
@@ -85,7 +85,7 @@ export default function Navbar() {
               ))}
             </ul>
             <Button
-              href="#buy-now"
+              href="/#buy-now"
               onClick={() => setOpen(false)}
               className="w-full"
             >

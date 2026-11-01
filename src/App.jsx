@@ -1,8 +1,6 @@
 import { MotionConfig } from "framer-motion";
 import Navbar from "./layout/Navbar";
-import Footer from "./layout/Footer";
-import MobileStickyBar from "./layout/MobileStickyBar";
-import HomePage from "./pages/HomePage";
+import AppRoutes from "./routes/AppRoutes";
 
 export default function App() {
   return (
@@ -10,10 +8,8 @@ export default function App() {
     <MotionConfig reducedMotion="user">
       <Navbar />
       <main>
-        <HomePage />
+        <AppRoutes />
       </main>
-      <Footer />
-      <MobileStickyBar />
     </MotionConfig>
   );
 }
