@@ -1,15 +1,19 @@
 import Hero from "../components/home/Hero";
+import VariantSelector from "../components/home/VariantSelector";
 
 export default function HomePage() {
+  // TEMPORARY: proves the selection state works. In the checkout module this
+  // becomes a navigation to /checkout carrying the selected order.
+  const handleOrder = (order) => {
+    alert(
+      `${order.quantity} x ${order.variant.name} = Rs. ${order.total} (COD)`
+    );
+  };
+
   return (
     <>
       <Hero />
-
-      {/* TEMPORARY placeholder so "Order COD" has somewhere to scroll.
-          Replaced by the real variant selector in Module 2. */}
-      <section id="buy-now" className="flex min-h-screen items-center justify-center">
-        <p className="text-muted">Product section coming in Module 2</p>
-      </section>
+      <VariantSelector onOrder={handleOrder} />
     </>
   );
 }
