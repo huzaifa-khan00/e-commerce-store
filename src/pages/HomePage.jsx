@@ -1,9 +1,13 @@
 import Hero from "../components/home/Hero";
+import TrustBar from "../components/home/TrustBar";
 import VariantSelector from "../components/home/VariantSelector";
+import FeatureShowcase from "../components/home/FeatureShowcase";
+import CodOrderGuide from "../components/home/CodOrderGuide";
+import Reviews from "../components/home/Reviews";
+import FAQ from "../components/home/FAQ";
 
 export default function HomePage() {
-  // TEMPORARY: proves the selection state works. In the checkout module this
-  // becomes a navigation to /checkout carrying the selected order.
+  // TEMPORARY: replaced by navigation to /checkout in the checkout module.
   const handleOrder = (order) => {
     alert(
       `${order.quantity} x ${order.variant.name} = Rs. ${order.total} (COD)`
@@ -13,7 +17,12 @@ export default function HomePage() {
   return (
     <>
       <Hero />
+      <TrustBar />
       <VariantSelector onOrder={handleOrder} />
+      <FeatureShowcase />
+      <CodOrderGuide />
+      <Reviews />
+      <FAQ />
     </>
   );
 }
