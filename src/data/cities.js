@@ -1,1 +1,23 @@
-// src/data/cities.js
+// Delivery cities for the checkout dropdown. Edit to match the courier's coverage.
+export const CITIES = [
+  "Karachi",
+  "Lahore",
+  "Islamabad",
+  "Rawalpindi",
+  "Faisalabad",
+  "Multan",
+  "Peshawar",
+  "Quetta",
+  "Hyderabad",
+  "Sialkot",
+  "Gujranwala",
+  "Bahawalpur",
+  "Sargodha",
+  "Sukkur",
+  "Larkana",
+  "Abbottabad",
+  "Mardan",
+  "Gujrat",
+  "Sahiwal",
+  "Other",
+];
