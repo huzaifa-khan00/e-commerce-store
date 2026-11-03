@@ -1,3 +1,4 @@
+import { useRef } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2 } from "lucide-react";
@@ -7,8 +8,11 @@ import Select from "../ui/Select";
 import { checkoutSchema } from "../../schemas/checkoutSchema";
 import { CITIES } from "../../data/cities";
 
-// onSubmit receives validated values (phone already normalized to 03XXXXXXXXX).
+// onSubmit(values, { bot }): values are validated (phone normalized to 03XXXXXXXXX).
+// `bot` is true when the hidden honeypot field was filled in (real people never see it).
 export default function CheckoutForm({ onSubmit }) {
+  const honeypotRef = useRef(null);
+
   const {
     register,
     handleSubmit,
@@ -19,7 +23,27 @@ export default function CheckoutForm({ onSubmit }) {
   });
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-5">
+    <form
+      onSubmit={handleSubmit((values) =>
+        onSubmit(values, { bot: Boolean(honeypotRef.current?.value) })
+      )}
+      noValidate
+      className="space-y-5"
+    >
+      {/* Honeypot: hidden from people, bots tend to fill it in */}
+      <div aria-hidden="true" className="absolute left-[-9999px] h-0 w-0 overflow-hidden">
+        <label>
+          Website
+          <input
+            ref={honeypotRef}
+            type="text"
+            name="website"
+            tabIndex={-1}
+            autoComplete="off"
+          />
+        </label>
+      </div>
+
       <Input
         label="Full Name"
         placeholder="e.g. Ali Khan"
