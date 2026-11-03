@@ -63,15 +63,16 @@ async function main() {
     updatedAt: serverTimestamp(),
   });
 
-  for (const v of PRODUCT.variants) {
+   PRODUCT.variants.forEach((v, index) => {
     batch.set(doc(db, "products", PRODUCT.id, "variants", v.id), {
       name: v.name,
       hex: v.hex,
       imageUrl: v.image,
       stock: v.stock,
       active: true,
+      sortOrder: index,
     });
-  }
+  });
 
   await batch.commit();
   console.log(`Done: product "${PRODUCT.id}" and ${PRODUCT.variants.length} colors saved.`);

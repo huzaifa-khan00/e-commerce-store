@@ -1,13 +1,14 @@
 import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import Button from "../components/ui/Button";
-import { PRODUCT } from "../data/product";
+import useProduct from "../hooks/useProduct";
 import { formatPrice } from "../utils/formatters";
 
 // Bottom-anchored quick-buy bar, mobile only.
 // Appears after the hero, hides while the product section is on screen
 // (it would duplicate the main order button there).
 export default function MobileStickyBar() {
+  const { product } = useProduct();
   const [pastHero, setPastHero] = useState(false);
   const [buyVisible, setBuyVisible] = useState(false);
 
@@ -29,7 +30,7 @@ export default function MobileStickyBar() {
     return () => observer.disconnect();
   }, []);
 
-  const show = pastHero && !buyVisible;
+  const show = pastHero && !buyVisible && product;
 
   return (
     <AnimatePresence>
@@ -45,7 +46,7 @@ export default function MobileStickyBar() {
           <div>
             <p className="text-xs text-muted">Cash on Delivery</p>
             <p className="font-heading text-lg font-semibold">
-              {formatPrice(PRODUCT.price)}
+              {formatPrice(product.price)}
             </p>
           </div>
           <Button href="#buy-now" className="px-6 py-2.5">
