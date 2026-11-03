@@ -1,1 +1,169 @@
-// firestore.rules
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ---------- Helpers ----------
+
+    // An admin is a signed-in user whose UID exists in the /admins collection.
+    function isAdmin() {
+      return request.auth != null
+        && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+    }
+
+    function validStatus(s) {
+      return s in ['pending', 'confirmed', 'dispatched', 'delivered', 'cancelled', 'returned'];
+    }
+
+    function orderKeys() {
+      return [
+        'orderNumber', 'customer', 'items', 'total', 'paymentMethod', 'status',
+        'courier', 'stockDeducted', 'cancelReason', 'adminNotes',
+        'createdAt', 'confirmedAt', 'dispatchedAt', 'deliveredAt',
+        'cancelledAt', 'returnedAt', 'updatedAt'
+      ];
+    }
+
+    function trackingKeys() {
+      return [
+        'status', 'courierName', 'trackingNumber',
+        'createdAt', 'dispatchedAt', 'deliveredAt', 'updatedAt'
+      ];
+    }
+
+    function validCustomer(c) {
+      return c is map
+        && c.keys().hasAll(['name', 'phone', 'address', 'city'])
+        && c.keys().hasOnly(['name', 'phone', 'address', 'city', 'notes'])
+        && c.name is string && c.name.size() >= 3 && c.name.size() <= 60
+        && c.phone is string && c.phone.matches('^03[0-9]{9}$')
+        && c.address is string && c.address.size() >= 10 && c.address.size() <= 200
+        && c.city is string && c.city.size() >= 2 && c.city.size() <= 40
+        && (!('notes' in c) || (c.notes is string && c.notes.size() <= 300));
+    }
+
+    // Shape check for one order item.
+    function validItem(item) {
+      return item is map
+        && item.keys().hasOnly(['productId', 'productName', 'variantId', 'variantName', 'unitPrice', 'quantity'])
+        && item.keys().hasAll(['productId', 'productName', 'variantId', 'variantName', 'unitPrice', 'quantity'])
+        && item.productId is string
+        && item.variantId is string
+        && item.productName is string
+        && item.variantName is string
+        && item.unitPrice is number
+        && item.quantity is int
+        && item.quantity >= 1
+        && validItemPrices(item);
+    }
+
+    // Compares the item against the real product and color in the database,
+    // so a customer can't send a fake price or order out-of-stock quantities.
+    function validItemPrices(item) {
+      let product = get(/databases/$(database)/documents/products/$(item.productId)).data;
+      let variant = get(/databases/$(database)/documents/products/$(item.productId)/variants/$(item.variantId)).data;
+      return product.active == true
+        && variant.active == true
+        && item.productName == product.name
+        && item.variantName == variant.name
+        && item.unitPrice == product.price
+        && item.quantity <= product.maxPerOrder
+        && item.quantity <= variant.stock;
+    }
+
+    function validOrderCreate(orderId) {
+      let d = request.resource.data;
+      return d.keys().hasOnly(orderKeys())
+        && d.keys().hasAll(orderKeys())
+        && d.orderNumber == orderId
+        && d.orderNumber.matches('^ORD-[A-Z0-9]{6}$')
+        && d.status == 'pending'
+        && d.paymentMethod == 'cod'
+        && validCustomer(d.customer)
+        && d.items is list
+        && d.items.size() == 1
+        && validItem(d.items[0])
+        && d.total is number
+        && d.total == d.items[0].unitPrice * d.items[0].quantity
+        && d.courier == null
+        && d.stockDeducted == false
+        && d.cancelReason == null
+        && d.adminNotes == null
+        && d.createdAt == request.time
+        && d.updatedAt == request.time
+        && d.confirmedAt == null
+        && d.dispatchedAt == null
+        && d.deliveredAt == null
+        && d.cancelledAt == null
+        && d.returnedAt == null
+        // The public tracking document must be created in the same batch.
+        && existsAfter(/databases/$(database)/documents/order_tracking/$(orderId));
+    }
+
+    function validTrackingCreate(orderNumber) {
+      let d = request.resource.data;
+      return d.keys().hasOnly(trackingKeys())
+        && d.keys().hasAll(trackingKeys())
+        && orderNumber.matches('^ORD-[A-Z0-9]{6}$')
+        && d.status == 'pending'
+        && d.courierName == null
+        && d.trackingNumber == null
+        && d.dispatchedAt == null
+        && d.deliveredAt == null
+        && d.createdAt == request.time
+        && d.updatedAt == request.time
+        // No orphan tracking documents: the order must be written in the same batch.
+        && existsAfter(/databases/$(database)/documents/orders/$(orderNumber));
+    }
+
+    // ---------- Collections ----------
+
+    // Product and colors: anyone can read, only admins can change.
+    match /products/{productId} {
+      allow read: if true;
+      allow write: if isAdmin();
+
+      match /variants/{variantId} {
+        allow read: if true;
+        allow write: if isAdmin();
+      }
+    }
+
+    // Orders: customers can only CREATE a valid pending order. They can never
+    // read, list, change or delete orders. Only admins can.
+    match /orders/{orderId} {
+      allow create: if validOrderCreate(orderId);
+      allow read: if isAdmin();
+      allow update: if isAdmin()
+        && validStatus(request.resource.data.status)
+        && request.resource.data.orderNumber == resource.data.orderNumber;
+      allow delete: if false;
+    }
+
+    // Public tracking: one document at a time by exact order number (no listing).
+    // Holds no personal data, just status and courier info.
+    match /order_tracking/{orderNumber} {
+      allow get: if true;
+      allow list: if false;
+      allow create: if validTrackingCreate(orderNumber);
+      allow update: if isAdmin() && validStatus(request.resource.data.status);
+      allow delete: if false;
+    }
+
+    // Audit log: admins can add and read entries, nobody can edit or delete.
+    match /admin_logs/{logId} {
+      allow create: if isAdmin()
+        && request.resource.data.adminUid == request.auth.uid
+        && request.resource.data.createdAt == request.time;
+      allow read: if isAdmin();
+      allow update, delete: if false;
+    }
+
+    // Admin allowlist: a user may check only their own entry.
+    // Entries are created by hand in the console, never from the app.
+    match /admins/{uid} {
+      allow get: if request.auth != null && request.auth.uid == uid;
+      allow list, write: if false;
+    }
+  }
+}

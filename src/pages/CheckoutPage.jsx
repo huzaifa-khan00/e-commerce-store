@@ -1,27 +1,52 @@
+import { useState } from "react";
 import { Navigate, useLocation, useNavigate } from "react-router-dom";
-import { ArrowLeft } from "lucide-react";
+import { AlertCircle, ArrowLeft } from "lucide-react";
 import CheckoutForm from "../components/checkout/CheckoutForm";
 import OrderSummary from "../components/checkout/OrderSummary";
+import { createOrder } from "../services/orderService";
+import { checkOrderLimit, recordOrder } from "../utils/rateLimit";
 import { generateOrderNumber } from "../utils/orderNumber";
 
 export default function CheckoutPage() {
   const { state } = useLocation();
   const navigate = useNavigate();
+  const [error, setError] = useState("");
   const order = state?.order;
 
   // Opened directly with no selected product? Send them to pick one.
   if (!order) return <Navigate to="/#buy-now" replace />;
 
-  const handlePlaceOrder = async (customer) => {
-    // TEMPORARY: simulates saving the order.
-    // Replaced by orderService.createOrder() in the Firebase module.
-    await new Promise((resolve) => setTimeout(resolve, 700));
-    const orderNumber = generateOrderNumber();
-
+  const goToSuccess = (orderNumber, customer) =>
     navigate("/order-success", {
       replace: true,
       state: { orderNumber, order, customer },
     });
+
+  const handlePlaceOrder = async (customer, { bot } = {}) => {
+    setError("");
+
+    // Honeypot tripped: pretend it worked, save nothing.
+    if (bot) {
+      goToSuccess(generateOrderNumber(), customer);
+      return;
+    }
+
+    const limit = checkOrderLimit();
+    if (!limit.allowed) {
+      setError(limit.message);
+      return;
+    }
+
+    try {
+      const { orderNumber } = await createOrder(order, customer);
+      recordOrder();
+      goToSuccess(orderNumber, customer);
+    } catch (err) {
+      console.error("Order failed:", err);
+      setError(
+        "We couldn't place your order. Please check your connection and try again, or order on WhatsApp."
+      );
+    }
   };
 
   return (
@@ -40,7 +65,17 @@ export default function CheckoutPage() {
         Just a few details. You pay when it arrives.
       </p>
 
-      <div className="mt-10 grid gap-8 lg:grid-cols-5">
+      {error && (
+        <div
+          role="alert"
+          className="mt-6 flex items-start gap-3 rounded-xl border border-red-400/30 bg-red-500/10 px-4 py-3 text-sm text-red-300"
+        >
+          <AlertCircle size={18} className="mt-0.5 shrink-0" />
+          {error}
+        </div>
+      )}
+
+      <div className="mt-8 grid gap-8 lg:grid-cols-5">
         <div className="glass-panel rounded-2xl p-6 lg:col-span-3">
           <CheckoutForm onSubmit={handlePlaceOrder} />
         </div>
