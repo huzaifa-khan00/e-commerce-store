@@ -1,4 +1,4 @@
-import { Link, Navigate, useLocation } from "react-router-dom";
+import { Navigate, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
 import { CheckCircle2 } from "lucide-react";
 import Button from "../components/ui/Button";
@@ -53,6 +53,9 @@ export default function OrderSuccessPage() {
           order={order}
           customer={customer}
         />
+        <Button href={`/track-order?order=${orderNumber}`} variant="ghost" className="w-full">
+          Track My Order
+        </Button>
         <Button href="/" variant="ghost" className="w-full">
           Back to Home
         </Button>
