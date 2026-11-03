@@ -26,3 +26,27 @@ export const STATUS_LABELS = {
   cancelled: "Cancelled",
   returned: "Returned",
 };
+
+// Which statuses an order may move to from each current status.
+// Cancelled and Returned are final.
+export const STATUS_TRANSITIONS = {
+  pending: ["confirmed", "cancelled"],
+  confirmed: ["dispatched", "cancelled"],
+  dispatched: ["delivered", "returned"],
+  delivered: ["returned"],
+  cancelled: [],
+  returned: [],
+};
+
+// The order timestamp that is set when an order enters a status.
+export const STATUS_TIMESTAMP_FIELD = {
+  confirmed: "confirmedAt",
+  dispatched: "dispatchedAt",
+  delivered: "deliveredAt",
+  cancelled: "cancelledAt",
+  returned: "returnedAt",
+};
+
+export function canTransition(from, to) {
+  return (STATUS_TRANSITIONS[from] ?? []).includes(to);
+}
