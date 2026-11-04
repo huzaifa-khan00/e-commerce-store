@@ -5,6 +5,7 @@ import Button from "../../components/ui/Button";
 import OrdersTable from "../../components/admin/OrdersTable";
 import OrderDetailsDrawer from "../../components/admin/OrderDetailsDrawer";
 import StatsCards from "../../components/admin/StatsCards";
+import StockManager from "../../components/admin/StockManager";
 import useAuth from "../../hooks/useAuth";
 import useOrders from "../../hooks/useOrders";
 import { logoutAdmin } from "../../services/authService";
@@ -14,10 +15,15 @@ import { RANGES, computeStats, filterByRange } from "../../utils/stats";
 import cn from "../../utils/cn";
 
 const FILTERS = ["all", ...Object.values(ORDER_STATUS)];
+const TABS = [
+  { key: "orders", label: "Orders & Sales" },
+  { key: "products", label: "Price & Stock" },
+];
 
 export default function AdminDashboardPage() {
   const { user } = useAuth();
   const { orders, loading, error } = useOrders();
+  const [tab, setTab] = useState("orders");
   const [filter, setFilter] = useState("all");
   const [search, setSearch] = useState("");
   const [range, setRange] = useState("all");
@@ -54,13 +60,10 @@ export default function AdminDashboardPage() {
   // updates by itself right after a status change.
   const selected = orders.find((o) => o.orderNumber === selectedNumber) ?? null;
 
+  const admin = { uid: user?.uid, email: user?.email };
+
   const handleStatusUpdate = (orderNumber, newStatus, extras) =>
-    updateOrderStatus({
-      orderNumber,
-      newStatus,
-      ...extras,
-      admin: { uid: user.uid, email: user.email },
-    });
+    updateOrderStatus({ orderNumber, newStatus, ...extras, admin });
 
   return (
     <section className="mx-auto max-w-5xl px-5 py-10">
@@ -74,7 +77,30 @@ export default function AdminDashboardPage() {
         </Button>
       </div>
 
-      {loading ? (
+      {/* Tabs */}
+      <div className="mt-8 flex gap-2 border-b border-white/10">
+        {TABS.map((t) => (
+          <button
+            key={t.key}
+            type="button"
+            onClick={() => setTab(t.key)}
+            className={cn(
+              "-mb-px border-b-2 px-4 py-2.5 text-sm font-medium transition-colors",
+              tab === t.key
+                ? "border-gold text-white"
+                : "border-transparent text-muted hover:text-white"
+            )}
+          >
+            {t.label}
+          </button>
+        ))}
+      </div>
+
+      {tab === "products" ? (
+        <div className="mt-8">
+          <StockManager admin={admin} />
+        </div>
+      ) : loading ? (
         <div className="flex justify-center py-16">
           <Loader2 className="animate-spin text-gold" />
         </div>

@@ -1,8 +1,9 @@
-import { Navigate, Route, Routes } from "react-router-dom";
+import { Route, Routes } from "react-router-dom";
 import HomePage from "../pages/HomePage";
 import CheckoutPage from "../pages/CheckoutPage";
 import OrderSuccessPage from "../pages/OrderSuccessPage";
 import TrackOrderPage from "../pages/TrackOrderPage";
+import NotFoundPage from "../pages/NotFoundPage";
 import AdminLoginPage from "../pages/admin/AdminLoginPage";
 import AdminDashboardPage from "../pages/admin/AdminDashboardPage";
 import ProtectedRoute from "./ProtectedRoute";
@@ -25,8 +26,7 @@ export default function AppRoutes() {
         }
       />
 
-      {/* Unknown URLs go home for now; a proper 404 page comes later */}
-      <Route path="*" element={<Navigate to="/" replace />} />
+      <Route path="*" element={<NotFoundPage />} />
     </Routes>
   );
 }
