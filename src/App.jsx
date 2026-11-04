@@ -1,5 +1,6 @@
 import { MotionConfig } from "framer-motion";
 import { useLocation } from "react-router-dom";
+import { Analytics } from "@vercel/analytics/react";
 import Navbar from "./layout/Navbar";
 import AppRoutes from "./routes/AppRoutes";
 import { AuthProvider } from "./context/AuthContext";
@@ -18,6 +19,7 @@ export default function App() {
           <main>
             <AppRoutes />
           </main>
+          <Analytics />
         </ProductProvider>
       </AuthProvider>
     </MotionConfig>
