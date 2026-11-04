@@ -1,6 +1,7 @@
 import { initializeApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
+import { initializeAppCheck, ReCaptchaEnterpriseProvider } from "firebase/app-check";
 
 // Values come from .env.local (never commit that file).
 const firebaseConfig = {
@@ -11,6 +12,8 @@ const firebaseConfig = {
   messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
   appId: import.meta.env.VITE_FIREBASE_APP_ID,
 };
+
+const recaptchaSiteKey = import.meta.env.VITE_RECAPTCHA_SITE_KEY;
 
 // Fail loudly if a value is missing, instead of a confusing Firebase error later.
 const missing = Object.entries(firebaseConfig)
@@ -23,7 +26,20 @@ if (missing.length > 0) {
   );
 }
 
+// Ensure the reCAPTCHA key is also present
+if (!recaptchaSiteKey) {
+  throw new Error("Missing VITE_RECAPTCHA_SITE_KEY in your environment configuration.");
+}
+
 const app = initializeApp(firebaseConfig);
+
+// Initialize App Check (runs safely in browser context)
+if (typeof window !== "undefined") {
+  initializeAppCheck(app, {
+    provider: new ReCaptchaEnterpriseProvider(recaptchaSiteKey),
+    isTokenAutoRefreshEnabled: true,
+  });
+}
 
 export const auth = getAuth(app);
 export const db = getFirestore(app);
