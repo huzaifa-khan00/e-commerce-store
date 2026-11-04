@@ -1,7 +1,10 @@
 import { initializeApp } from "firebase/app";
+import {
+  initializeAppCheck,
+  ReCaptchaEnterpriseProvider,
+} from "firebase/app-check";
 import { getAuth } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
-import { initializeAppCheck, ReCaptchaEnterpriseProvider } from "firebase/app-check";
 
 // Values come from .env.local (never commit that file).
 const firebaseConfig = {
@@ -12,8 +15,6 @@ const firebaseConfig = {
   messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
   appId: import.meta.env.VITE_FIREBASE_APP_ID,
 };
-
-const recaptchaSiteKey = import.meta.env.VITE_RECAPTCHA_SITE_KEY;
 
 // Fail loudly if a value is missing, instead of a confusing Firebase error later.
 const missing = Object.entries(firebaseConfig)
@@ -26,17 +27,20 @@ if (missing.length > 0) {
   );
 }
 
-// Ensure the reCAPTCHA key is also present
-if (!recaptchaSiteKey) {
-  throw new Error("Missing VITE_RECAPTCHA_SITE_KEY in your environment configuration.");
-}
-
 const app = initializeApp(firebaseConfig);
 
-// Initialize App Check (runs safely in browser context)
-if (typeof window !== "undefined") {
+// App Check must start before any other Firebase service is used.
+// Skipped when no key is set, so the site works fine without it.
+const siteKey = import.meta.env.VITE_RECAPTCHA_SITE_KEY;
+if (siteKey) {
+  if (import.meta.env.DEV) {
+    // On localhost, Firebase prints a debug token in the browser console.
+    // Register that token once in the Firebase console (App Check → your app →
+    // Manage debug tokens).
+    self.FIREBASE_APPCHECK_DEBUG_TOKEN = true;
+  }
   initializeAppCheck(app, {
-    provider: new ReCaptchaEnterpriseProvider(recaptchaSiteKey),
+    provider: new ReCaptchaEnterpriseProvider(siteKey),
     isTokenAutoRefreshEnabled: true,
   });
 }
